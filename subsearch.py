@@ -134,7 +134,6 @@ def enumerate_subdomains(domain):
     return all_subdomains
 
 def save_results(subdomains, output_file):
-    """ Save discovered subdomains to a file """
     with open(output_file, "w") as file:
         for sub in sorted(subdomains):
             file.write(sub + "\n")
