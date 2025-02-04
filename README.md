@@ -9,3 +9,13 @@ Start to search
 ```
 python3 subsearch.py DOMAIN
 ```
+
+---
+
+If you get:  
+ImportError: No module named dns  
+
+You can install dns python
+```
+sudo apt-get install python3-dnspython
+```
