@@ -5,12 +5,10 @@ import dns.resolver
 import argparse
 import concurrent.futures
 
-# User-Agent header to prevent blocking
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
 }
 
-# Wordlist for brute-force method
 WORDLIST = "subdomains.txt"
 
 def is_resolvable(subdomain):
@@ -26,13 +24,17 @@ def brute_force_subdomains(domain):
     with open(WORDLIST, "r") as file:
         subdomains = [line.strip() + "." + domain for line in file]
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         future_to_subdomain = {executor.submit(is_resolvable, sub): sub for sub in subdomains}
+        
         for future in concurrent.futures.as_completed(future_to_subdomain):
             sub = future_to_subdomain[future]
-            if future.result():
-                print(f"[FOUND] {sub}")
-                found_subdomains.append(sub)
+            try:
+                if future.result():
+                    print(f"[FOUND] {sub}")
+                    found_subdomains.append(sub)
+            except Exception as e:
+                print(f"[ERROR] {sub}: {e}")
 
     return found_subdomains
 
@@ -106,23 +108,18 @@ def enumerate_subdomains(domain):
 
     print("\n[+] Starting subdomain enumeration...\n")
 
-    # 1. Brute-force method
     print("[*] Running brute-force subdomain enumeration...")
     all_subdomains.update(brute_force_subdomains(domain))
 
-    # 2. CRT.sh (Certificate Transparency Logs)
     print("[*] Fetching subdomains from crt.sh...")
     all_subdomains.update(crtsh_enum(domain))
 
-    # 3. HackerTarget API
     print("[*] Fetching subdomains from HackerTarget...")
     all_subdomains.update(hackertarget_enum(domain))
 
-    # 4. AlienVault OTX API
     print("[*] Fetching subdomains from AlienVault...")
     all_subdomains.update(alienvault_enum(domain))
 
-    # 5. Urlscan.io API 
     print("[*] Fetching subdomains from Urlscan.io...")
     all_subdomains.update(urlscan_enum(domain))
 
